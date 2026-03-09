@@ -381,14 +381,15 @@ class ViewAssistSatelliteEntity(WyomingAssistSatellite, VASatelliteEntity):
                     _LOGGER.debug("Did not receive played event for announcement")
 
     async def async_start_conversation(
-        self, start_announcement: AssistSatelliteAnnouncement
+        self, start_announcement: AssistSatelliteAnnouncement | None = None
     ) -> None:
         """Start a conversation from the satellite."""
-        await self.async_announce(start_announcement)
+        if start_announcement is not None:
+            await self.async_announce(start_announcement)
         self._run_pipeline_once(
             RunPipeline(
                 start_stage=PipelineStage.ASR,
-                end_stage=PipelineStage.ASR,
+                end_stage=PipelineStage.TTS,
                 restart_on_end=False,
             )
         )
