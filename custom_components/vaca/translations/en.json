@@ -82,6 +82,9 @@
             "wake_word_threshold": {
                 "name": "Wake word threshold"
             },
+            "wake_listen_timeout": {
+                "name": "Wake listen timeout"
+            },
             "zoom_level": {
                 "name": "Zoom level"
             },
