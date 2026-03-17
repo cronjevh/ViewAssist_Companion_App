@@ -79,6 +79,9 @@
             "wake_word_threshold": {
                 "name": "Uyandırma kelimesi eşiği"
             },
+            "wake_listen_timeout": {
+                "name": "Uyandırma dinleme zaman aşımı"
+            },
             "zoom_level": {
                 "name": "Yakınlaştırma seviyesi"
             }

@@ -71,6 +71,9 @@
       "screen_brightness": {
         "name": "Screen brightness"
       },
+      "wake_listen_timeout": {
+        "name": "Wake listen timeout"
+      },
       "raw_proximity_threshold": {
         "name": "Raw proximity threshold"
       }

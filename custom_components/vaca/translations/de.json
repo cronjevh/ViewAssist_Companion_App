@@ -82,6 +82,9 @@
             "wake_word_threshold": {
                 "name": "Weckwort-Schwellenwert"
             },
+            "wake_listen_timeout": {
+                "name": "Weckwort-Hörzeitlimit"
+            },
             "zoom_level": {
                 "name": "Zoomstufe"
             }
