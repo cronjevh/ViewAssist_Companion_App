@@ -13,7 +13,7 @@ from homeassistant.components.wyoming import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.typing import ConfigType
@@ -22,6 +22,12 @@ from .client import AsyncTcpClient
 from .const import ATTR_SPEAKER, DOMAIN
 from .custom import CustomEvent
 from .devices import VASatelliteDevice
+
+try:
+    # HA 2026.10+ refreshes Wyoming service info through a coordinator
+    from homeassistant.components.wyoming.coordinator import WyomingInfoCoordinator
+except ImportError:  # HA <= 2026.7
+    WyomingInfoCoordinator = None  # type: ignore[assignment]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -65,8 +71,28 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if service is None:
         raise ConfigEntryNotReady("Unable to connect")
 
-    item = DomainDataItem(service=service)
+    # HA 2026.10 made the coordinator a required part of DomainDataItem.
+    # Build it when the running core exposes one, so the same file loads on
+    # both sides of that change (a core rollback must not break the fork).
+    coordinator = None
+    if WyomingInfoCoordinator is not None:
+        coordinator = WyomingInfoCoordinator(
+            hass, entry, entry.data["host"], entry.data["port"]
+        )
 
+        @callback
+        def _async_update_service_info() -> None:
+            """Keep the service info in sync with the coordinator."""
+            service.info = coordinator.data
+
+        entry.async_on_unload(coordinator.async_add_listener(_async_update_service_info))
+        coordinator.async_set_updated_data(service.info)
+
+        item = DomainDataItem(service=service, coordinator=coordinator)
+    else:
+        item = DomainDataItem(service=service)
+
+    entry.runtime_data = item
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = item
 
     await hass.config_entries.async_forward_entry_setups(entry, service.platforms)
