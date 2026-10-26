@@ -79,6 +79,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         coordinator = WyomingInfoCoordinator(
             hass, entry, entry.data["host"], entry.data["port"]
         )
+        # Core polls the service every 30s by default. The VACA app treats every
+        # new TCP connection as a client and drops audio streaming while one is
+        # open, so a 30s poll mid-turn loses the microphone audio and cloud STT
+        # reports "400 No audio data received". Service info is pushed to us over
+        # the long-lived connection anyway, so switch the periodic refresh off.
+        coordinator.update_interval = None
 
         @callback
         def _async_update_service_info() -> None:
